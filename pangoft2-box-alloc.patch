@@ -1,0 +1,44 @@
+diff -up pango-1.28.1/pango/pangoft2-render.c.box-alloc pango-1.28.1/pango/pangoft2-render.c
+--- pango-1.28.1/pango/pangoft2-render.c.box-alloc	2010-05-04 11:50:40.000000000 -0400
++++ pango-1.28.1/pango/pangoft2-render.c	2011-01-26 13:58:30.981494512 -0500
+@@ -121,9 +121,17 @@ pango_ft2_font_render_box_glyph (int    
+ 
+   box->bitmap.width = width;
+   box->bitmap.rows = height;
+-  box->bitmap.pitch = height;
++  box->bitmap.pitch = width;
+ 
+-  box->bitmap.buffer = g_malloc0 (box->bitmap.rows * box->bitmap.pitch);
++  if (box->bitmap.pitch > 0)
++    box->bitmap.buffer = g_malloc0_n (box->bitmap.rows, box->bitmap.pitch);
++  else
++    box->bitmap.buffer = NULL;
++
++  if (G_UNLIKELY (!box->bitmap.buffer)) {
++    g_slice_free (PangoFT2RenderedGlyph, box);
++    return NULL;
++  }
+ 
+   /* draw the box */
+   for (j = 0; j < line_width; j++)
+@@ -226,6 +234,11 @@ pango_ft2_font_render_glyph (PangoFont *
+       rendered->bitmap_left = face->glyph->bitmap_left;
+       rendered->bitmap_top = face->glyph->bitmap_top;
+ 
++      if (G_UNLIKELY (!rendered->bitmap.buffer)) {
++        g_slice_free (PangoFT2RenderedGlyph, rendered);
++	return NULL;
++      }
++
+       return rendered;
+     }
+   else
+@@ -276,6 +289,8 @@ pango_ft2_renderer_draw_glyph (PangoRend
+   if (rendered_glyph == NULL)
+     {
+       rendered_glyph = pango_ft2_font_render_glyph (font, glyph);
++      if (rendered_glyph == NULL)
++        return;
+       add_glyph_to_cache = TRUE;
+     }
+ 

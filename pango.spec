@@ -9,7 +9,7 @@
 Summary: System for layout and rendering of internationalized text
 Name: pango
 Version: 1.28.1
-Release: 3%{?dist}
+Release: 3%{?dist}.3
 License: LGPLv2+
 Group: System Environment/Libraries
 Source: http://download.gnome.org/sources/pango/1.28/pango-%{version}.tar.bz2
@@ -39,6 +39,9 @@ BuildRequires: gtk-doc
 
 # Look for pango.modules in an arch-specific directory
 Patch0: pango-1.21.4-lib64.patch
+
+# https://bugzilla.gnome.org/show_bug.cgi?id=639882
+Patch1: pangoft2-box-alloc.patch
 
 %description
 Pango is a library for laying out and rendering of text, with an emphasis
@@ -74,11 +77,12 @@ for the pango package.
 %setup -q -n pango-%{version}
 
 %patch0 -p1 -b .lib64
+%patch1 -p1 -b .box-alloc
 
 %build
 
 # We try hard to not link to libstdc++
-CFLAGS="$RPM_OPT_FLAGS -fno-strict-aliasing" %configure --enable-gtk-doc --enable-doc-cross-references --with-included-modules=basic-fc
+CXXFLAGS="$RPM_OPT_FLAGS -fno-strict-aliasing" CFLAGS="$RPM_OPT_FLAGS -fno-strict-aliasing" %configure --enable-gtk-doc --enable-doc-cross-references --with-included-modules=basic-fc
 make
 
 %install
@@ -232,6 +236,17 @@ fi
 
 
 %changelog
+* Wed Jan 26 2011 Matthias Clasen <mclasen@redhat.com> - 1.28.1-3.el6_0.3
+- Fix a division by zero found in testing
+
+* Mon Jan 24 2011 Matthias Clasen <mclasen@redhat.com> - 1.28.1-3.el6_0.2
+- Use -fno-strict-aliasing for C++, too
+- Escape macros in %%changelog
+
+* Mon Jan 24 2011 Matthias Clasen <mclasen@redhat.com> - 1.28.1-3.el6_0.1
+- Prevent heap corruption with malformed fonts. (CVE-2011-0020)
+- Resolves: #671529
+
 * Fri Jun 25 2010 Matthias Clasen <mclasen@redhat.com> - 1.28.1-3
 - Fix up requires
 Resolves: #593073
@@ -492,7 +507,7 @@ Resolves: #605097
 - Remove "static libs" from -devel description, since we don't ship them.
 
 * Fri Jan 12 2007 Behdad Esfahbod <besfahbo@redhat.com> - 1.15.3-5
-- Require pango = %{version}-%{release} in devel (previously didn't have
+- Require pango = %%{version}-%%{release} in devel (previously didn't have
   releaes).
 
 * Thu Jan 11 2007 Behdad Esfahbod <besfahbo@redhat.com> - 1.15.3-4
