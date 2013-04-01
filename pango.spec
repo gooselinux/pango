@@ -9,7 +9,7 @@
 Summary: System for layout and rendering of internationalized text
 Name: pango
 Version: 1.28.1
-Release: 3%{?dist}.3
+Release: 3%{?dist}.5
 License: LGPLv2+
 Group: System Environment/Libraries
 Source: http://download.gnome.org/sources/pango/1.28/pango-%{version}.tar.bz2
@@ -42,6 +42,10 @@ Patch0: pango-1.21.4-lib64.patch
 
 # https://bugzilla.gnome.org/show_bug.cgi?id=639882
 Patch1: pangoft2-box-alloc.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=CVE-2011-0064
+Patch2: pango-hb_buffer_ensure-realloc.patch
+Patch3: pango-hb_buffer_enlarge-overflow.patch
 
 %description
 Pango is a library for laying out and rendering of text, with an emphasis
@@ -78,6 +82,8 @@ for the pango package.
 
 %patch0 -p1 -b .lib64
 %patch1 -p1 -b .box-alloc
+%patch2 -p1 -b .hb_buffer-realloc
+%patch3 -p1 -b .hb_buffer-enlarge
 
 %build
 
@@ -236,6 +242,13 @@ fi
 
 
 %changelog
+* Mon Feb 28 2011 Matthias Clasen <mclasen@redhat.com> - 1.28.1-3.el6_0.5
+- Prevent an integer overflow in hb_buffer_ensure()
+Related: #679693
+
+* Sat Feb 26 2011 Tomas Hoger <thoger@redhat.com> - 1.28.1-3.el6_0.4
+- Check for realloc failures in hb_buffer_ensure() (CVE-2011-0064)
+
 * Wed Jan 26 2011 Matthias Clasen <mclasen@redhat.com> - 1.28.1-3.el6_0.3
 - Fix a division by zero found in testing
 

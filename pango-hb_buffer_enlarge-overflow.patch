@@ -1,0 +1,22 @@
+diff -up pango-1.28.1/pango/opentype/hb-buffer.c.hb_buffer-enlarge pango-1.28.1/pango/opentype/hb-buffer.c
+--- pango-1.28.1/pango/opentype/hb-buffer.c.hb_buffer-enlarge	2011-02-28 16:37:18.449223484 -0500
++++ pango-1.28.1/pango/opentype/hb-buffer.c	2011-02-28 16:39:45.298387617 -0500
+@@ -139,8 +139,16 @@ hb_buffer_ensure (hb_buffer_t *buffer, u
+     while (size > new_allocated)
+       new_allocated += (new_allocated >> 1) + 8;
+ 
+-    new_pos = (hb_internal_glyph_position_t *) realloc (buffer->positions, new_allocated * sizeof (buffer->positions[0]));
+-    new_info = (hb_internal_glyph_info_t *) realloc (buffer->in_string, new_allocated * sizeof (buffer->in_string[0]));
++    ASSERT_STATIC (sizeof (buffer->in_string[0]) == sizeof (buffer->positions[0]));
++    hb_bool_t overflows = new_allocated >= ((unsigned int) -1) / sizeof (buffer->in_string[0]);
++
++    if (HB_UNLIKELY (overflows)) {
++      new_pos = NULL;
++      new_info = NULL;
++    } else {
++      new_pos = (hb_glyph_position_t *) realloc (buffer->positions, new_allocated * sizeof (buffer->positions[0]));
++      new_info = (hb_glyph_info_t *) realloc (buffer->in_string, new_allocated * sizeof (buffer->in_string[0]));
++    }
+ 
+     if (HB_UNLIKELY (!new_pos || !new_info))
+       buffer->in_error = TRUE;
